@@ -72,6 +72,23 @@ namespace QonversionUnity
         /// Formatted introductory price of a subscription, including its currency sign, such as €2.99
         [CanBeNull] public readonly string PrettyIntroductoryPrice;
 
+#if UNITY_EDITOR
+        public Product(Dictionary<string, string> dict)
+        {
+            if ( dict.TryGetValue("id", out var value) ) QonversionId = value as string;
+            if ( dict.TryGetValue("storeId", out value) ) StoreId = value as string;
+            if ( dict.TryGetValue("type", out value) ) Type = FormatType(value);
+            if ( dict.TryGetValue("duration", out value) ) Duration = FormatDuration(value);
+            if ( dict.TryGetValue("trialDuration", out value) ) TrialDuration = FormatTrialDuration(value);
+            if ( dict.TryGetValue("prettyPrice", out value) ) PrettyPrice = value as string;
+            if ( dict.TryGetValue("offeringId", out value) ) OfferingId = value as string;
+            if ( dict.TryGetValue("localizedTitle", out value) ) StoreTitle = value as string;
+            if ( dict.TryGetValue("storeDescription", out value) ) StoreDescription = value as string;
+            if ( dict.TryGetValue("currencyCode", out value) ) CurrencyCode = value as string;
+            if ( dict.TryGetValue("price", out value) ) Price = double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedPrice) ? parsedPrice : 0.0;
+        }
+#endif
+
         public Product(Dictionary<string, object> dict)
         {
             if (dict.TryGetValue("id", out object value)) QonversionId = value as string;
