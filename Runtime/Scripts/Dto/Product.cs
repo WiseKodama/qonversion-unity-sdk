@@ -77,9 +77,7 @@ namespace QonversionUnity
         {
             if ( dict.TryGetValue("id", out var value) ) QonversionId = value as string;
             if ( dict.TryGetValue("storeId", out value) ) StoreId = value as string;
-            if ( dict.TryGetValue("type", out value) ) Type = FormatType(value);
-            if ( dict.TryGetValue("duration", out value) ) Duration = FormatDuration(value);
-            if ( dict.TryGetValue("trialDuration", out value) ) TrialDuration = FormatTrialDuration(value);
+            if ( dict.TryGetValue("type", out value) ) Type = Mapper.FormatType(value);
             if ( dict.TryGetValue("prettyPrice", out value) ) PrettyPrice = value as string;
             if ( dict.TryGetValue("offeringId", out value) ) OfferingId = value as string;
             if ( dict.TryGetValue("localizedTitle", out value) ) StoreTitle = value as string;
