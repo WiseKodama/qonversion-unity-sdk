@@ -86,9 +86,9 @@ namespace QonversionUnity
             }
         }
 
-        public void Identify(string userID)
+        public void Identify(string userID, string callbackName)
         {
-            CallQonversion("identify", userID);
+            CallQonversion("identify", userID, callbackName);
         }
 
         public void Logout()
@@ -148,9 +148,19 @@ namespace QonversionUnity
             CallQonversion("offerings", callbackName);
         }
 
-        public void RemoteConfig(string callbackName)
+        public void RemoteConfig(string contextKey, string callbackName)
         {
-            CallQonversion("remoteConfig", callbackName);
+            CallQonversion("remoteConfig", contextKey, callbackName);
+        }
+
+        public void RemoteConfigList(string callbackName)
+        {
+            CallQonversion("remoteConfigList", callbackName);
+        }
+
+        public void RemoteConfigList(string contextKeysJson, bool includeEmptyContextKey, string callbackName)
+        {
+            CallQonversion("remoteConfigList", contextKeysJson, includeEmptyContextKey, callbackName);
         }
 
         public void AttachUserToExperiment(string experimentId, string groupId, string callbackName)

@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace QonversionUnity
 {
@@ -21,14 +22,16 @@ namespace QonversionUnity
         void UpdatePurchase(PurchaseUpdateModel purchaseUpdateModel, string callbackName);
         void Products(string callbackName);
         void Offerings(string callbackName);
-        void RemoteConfig(string callbackName);
+        void RemoteConfig([CanBeNull] string contextKey, string callbackName);
+        void RemoteConfigList(string callbackName);
+        void RemoteConfigList(string contextKeysJson, bool includeEmptyContextKey, string callbackName);
         void AttachUserToExperiment(string experimentId, string groupId, string callbackName);
         void DetachUserFromExperiment(string experimentId, string callbackName);
         void AttachUserToRemoteConfiguration(string remoteConfigurationId, string callbackName);
         void DetachUserFromRemoteConfiguration(string remoteConfigurationId, string callbackName);
         void CheckTrialIntroEligibility(string productIdsJson, string callbackName);
         void SetAppleSearchAdsAttributionEnabled(bool enable);
-        void Identify(string userID);
+        void Identify(string userID, string callbackName);
         void Logout();
         void UserInfo(string callbackName);
         void PromoPurchase(string storeProductId, string callbackName);

@@ -12,21 +12,24 @@ namespace QonversionUnity
         private const string OnCheckEntitlementsMethodName = "OnCheckEntitlements";
         private const string OnPurchaseMethodName = "OnPurchase";
         private const string OnPromoPurchaseMethodName = "OnPromoPurchase";
-        private const string OnPurchaseProductMethodName = "OnPurchaseProduct";
         private const string OnUpdatePurchaseMethodName = "OnUpdatePurchase";
-        private const string OnUpdatePurchaseWithProductMethodName = "OnUpdatePurchaseWithProduct";
         private const string OnRestoreMethodName = "OnRestore";
         private const string OnProductsMethodName = "OnProducts";
         private const string OnOfferingsMethodName = "OnOfferings";
         private const string OnRemoteConfigMethodName = "OnRemoteConfig";
+        private const string OnRemoteConfigListMethodName = "OnRemoteConfigList";
+        private const string OnRemoteConfigListForContextKeysMethodName = "OnRemoteConfigListForContextKeys";
         private const string OnEligibilitiesMethodName = "OnEligibilities";
+        private const string OnIdentityMethodName = "OnIdentity";
         private const string OnUserInfoMethodName = "OnUserInfo";
         private const string OnUserPropertiesMethodName = "OnUserProperties";
         private const string OnAttachUserMethodName = "OnAttachUser";
         private const string OnDetachUserMethodName = "OnDetachUser";
 
-        private const string SdkVersion = "7.1.1";
+        private const string SdkVersion = "7.4.0";
         private const string SdkSource = "unity";
+
+        private const string DefaultRemoteConfigContextKey = "";
 
         private IQonversionWrapper _nativeWrapperInstance;
         private Qonversion.OnUpdatedEntitlementsReceived _onUpdatedEntitlementsReceived;
@@ -40,9 +43,12 @@ namespace QonversionUnity
         private Qonversion.OnPurchaseResultReceived UpdatePurchaseCallback { get; set; }
         private List<Qonversion.OnProductsReceived> ProductsCallbacks { get; } = new List<Qonversion.OnProductsReceived>();
         private List<Qonversion.OnOfferingsReceived> OfferingsCallbacks { get; } = new List<Qonversion.OnOfferingsReceived>();
-        private List<Qonversion.OnRemoteConfigReceived> RemoteConfigCallbacks { get; } = new List<Qonversion.OnRemoteConfigReceived>();
+        private Dictionary<string, List<Qonversion.OnRemoteConfigReceived>> RemoteConfigCallbacks { get; } = new Dictionary<string, List<Qonversion.OnRemoteConfigReceived>>();
+        private Qonversion.OnRemoteConfigListReceived RemoteConfigListCallback { get; set; }
+        private Qonversion.OnRemoteConfigListReceived RemoteConfigListForContextKeysCallback { get; set; }
         private Qonversion.OnEligibilitiesReceived EligibilitiesCallback { get; set; }
         private Qonversion.OnEntitlementsReceived PromoPurchaseCallback { get; set; }
+        private Qonversion.OnUserInfoReceived IdentityCallback { get; set; }
         private Qonversion.OnUserInfoReceived UserInfoCallback { get; set; }
         private Qonversion.OnUserPropertiesReceived UserPropertiesCallback { get; set; }
         private Qonversion.OnAttachUserResponseReceived AttachUserCallback { get; set; }
@@ -135,9 +141,40 @@ namespace QonversionUnity
 
         public void RemoteConfig(Qonversion.OnRemoteConfigReceived callback)
         {
-            RemoteConfigCallbacks.Add(callback);
-            IQonversionWrapper instance = GetNativeWrapper();
-            instance.RemoteConfig(OnRemoteConfigMethodName);
+            LoadRemoteConfig(null, callback);
+        }
+
+        public void RemoteConfig(string contextKey, Qonversion.OnRemoteConfigReceived callback)
+        {
+            LoadRemoteConfig(contextKey, callback);
+        }
+
+        private void LoadRemoteConfig([CanBeNull] string contextKey, Qonversion.OnRemoteConfigReceived callback)
+        {
+            var key = contextKey ?? DefaultRemoteConfigContextKey;
+            if (!RemoteConfigCallbacks.ContainsKey(key)) {
+                RemoteConfigCallbacks[key] = new List<Qonversion.OnRemoteConfigReceived>();
+            }
+
+            RemoteConfigCallbacks[key].Add(callback);
+            var instance = GetNativeWrapper();
+            instance.RemoteConfig(contextKey, OnRemoteConfigMethodName);
+        }
+
+        public void RemoteConfigList(Qonversion.OnRemoteConfigListReceived callback)
+        {
+            RemoteConfigListCallback = callback;
+            var instance = GetNativeWrapper();
+            instance.RemoteConfigList(OnRemoteConfigListMethodName);
+        }
+
+        public void RemoteConfigList(string[] contextKeys, bool includeEmptyContextKey, Qonversion.OnRemoteConfigListReceived callback)
+        {
+            RemoteConfigListForContextKeysCallback = callback;
+            var contextKeysJson = contextKeys.toJson();
+            
+            var instance = GetNativeWrapper();
+            instance.RemoteConfigList(contextKeysJson, includeEmptyContextKey, OnRemoteConfigListForContextKeysMethodName);
         }
 
         public void AttachUserToExperiment(string experimentId, string groupId, Qonversion.OnAttachUserResponseReceived callback)
@@ -200,7 +237,14 @@ namespace QonversionUnity
         public void Identify(string userID)
         {
             IQonversionWrapper instance = GetNativeWrapper();
-            instance.Identify(userID);
+            instance.Identify(userID, OnIdentityMethodName);
+        }
+
+        public void Identify(string userID, Qonversion.OnUserInfoReceived callback)
+        {
+            IdentityCallback = callback;
+            IQonversionWrapper instance = GetNativeWrapper();
+            instance.Identify(userID, OnIdentityMethodName);
         }
 
         public void Logout()
@@ -215,7 +259,7 @@ namespace QonversionUnity
             IQonversionWrapper instance = GetNativeWrapper();
             instance.UserInfo(OnUserInfoMethodName);
         }
-        
+
         public void Attribution(Dictionary<string, object> conversionData, AttributionProvider attributionProvider)
         {
             Attribution(conversionData.toJson(), attributionProvider);
@@ -229,14 +273,16 @@ namespace QonversionUnity
 
             instance.AddAttributionData(conversionData, providerName);
         }
-  
+
         public void SetUserProperty(UserPropertyKey key, string value)
         {
-            if (key == UserPropertyKey.Custom) {
-                Debug.LogWarning("Can not set user property with the key `UserPropertyKey.Custom`. " + 
+            if (key == UserPropertyKey.Custom)
+            {
+                Debug.LogWarning("Can not set user property with the key `UserPropertyKey.Custom`. " +
                                  "To set custom user property, use the `SetCustomUserProperty` method.");
                 return;
             }
+
             IQonversionWrapper instance = GetNativeWrapper();
             instance.SetUserProperty(key, value);
         }
@@ -247,7 +293,8 @@ namespace QonversionUnity
             instance.SetCustomUserProperty(key, value);
         }
 
-        public void UserProperties(Qonversion.OnUserPropertiesReceived callback) {
+        public void UserProperties(Qonversion.OnUserPropertiesReceived callback)
+        {
             UserPropertiesCallback = callback;
             IQonversionWrapper instance = GetNativeWrapper();
             instance.UserProperties(OnUserPropertiesMethodName);
@@ -357,15 +404,66 @@ namespace QonversionUnity
             var error = Mapper.ErrorFromJson(jsonString);
             if (error != null)
             {
-                RemoteConfigCallbacks.ForEach(callback => callback(null, error));
+                if (
+                    Json.Deserialize(jsonString) is not Dictionary<string, object> dict ||
+                    !dict.TryGetValue("contextKey", out var contextKey)
+                ) {
+                    foreach (var (_, callbacks) in RemoteConfigCallbacks)
+                    {
+                        callbacks.ForEach(callback => callback(null, error));
+                    }
+
+                    RemoteConfigCallbacks.Clear();
+                    return;
+                }
+
+                var key = contextKey == null ? DefaultRemoteConfigContextKey : contextKey as string;
+
+                if (key != null && RemoteConfigCallbacks.ContainsKey(key))
+                {
+                    RemoteConfigCallbacks[key].ForEach(callback => callback(null, error));
+                    RemoteConfigCallbacks[key].Clear();
+                }
             }
             else
             {
                 var remoteConfig = Mapper.RemoteConfigFromJson(jsonString);
-                RemoteConfigCallbacks.ForEach(callback => callback(remoteConfig, null));
-            }
 
-            RemoteConfigCallbacks.Clear();
+                var key = remoteConfig.Source?.ContextKey ?? DefaultRemoteConfigContextKey;
+                if (RemoteConfigCallbacks.ContainsKey(key))
+                {
+                    RemoteConfigCallbacks[key].ForEach(callback => callback(remoteConfig, null));
+                    RemoteConfigCallbacks[key].Clear();
+                }
+            }
+        }
+
+        // Called from the native SDK - Called when remoteConfigList received from the remoteConfigList() method without context keys 
+        private void OnRemoteConfigList(string jsonString)
+        {
+            OnRemoteConfigListResult(jsonString, RemoteConfigListCallback);
+        }
+
+        // Called from the native SDK - Called when remoteConfigList received from the remoteConfigList() method with context keys 
+        private void OnRemoteConfigListForContextKeys(string jsonString)
+        {
+            OnRemoteConfigListResult(jsonString, RemoteConfigListForContextKeysCallback);
+        }
+
+        private void OnRemoteConfigListResult(string jsonString, Qonversion.OnRemoteConfigListReceived callback)
+        {
+            if (callback == null) return;
+
+            var error = Mapper.ErrorFromJson(jsonString);
+            if (error != null)
+            {
+                callback(null, error);
+            }
+            else
+            {
+                var remoteConfigList = Mapper.RemoteConfigListFromJson(jsonString);
+                callback(remoteConfigList, null);
+            }
         }
 
         private void OnAttachUser(string jsonString)
@@ -413,6 +511,25 @@ namespace QonversionUnity
             }
 
             EligibilitiesCallback = null;
+        }
+
+        // Called from the native SDK - Called when user info received from the Identify() method 
+        private void OnIdentity(string jsonString)
+        {
+            if (IdentityCallback == null) return;
+
+            var error = Mapper.ErrorFromJson(jsonString);
+            if (error != null)
+            {
+                IdentityCallback(null, error);
+            }
+            else
+            {
+                User userInfo = Mapper.UserFromJson(jsonString);
+                IdentityCallback(userInfo, null);
+            }
+
+            IdentityCallback = null;
         }
 
         // Called from the native SDK - Called when user info received from the UserInfo() method 

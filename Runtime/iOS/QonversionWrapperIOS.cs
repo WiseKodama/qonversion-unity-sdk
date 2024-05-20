@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace QonversionUnity
 {
@@ -42,7 +41,7 @@ namespace QonversionUnity
         private static extern void _setAppleSearchAdsAttributionEnabled(bool enable);
 
         [DllImport("__Internal")]
-        private static extern void _identify(string userID);
+        private static extern void _identify(string userID, string callbackName);
 
         [DllImport("__Internal")]
         private static extern void _logout();
@@ -69,7 +68,13 @@ namespace QonversionUnity
         private static extern void _offerings(string callbackName);
 
         [DllImport("__Internal")]
-        private static extern void _remoteConfig(string callbackName);
+        private static extern void _remoteConfig(string contextKey, string callbackName);
+
+        [DllImport("__Internal")]
+        private static extern void _remoteConfigList(string callbackName);
+
+        [DllImport("__Internal")]
+        private static extern void _remoteConfigListForContextKeys(string contextKeysJson, bool includeEmptyContextKey, string callbackName);
 
         [DllImport("__Internal")]
         private static extern void _attachUserToExperiment(string experimentId, string groupId, string callbackName);
@@ -175,10 +180,10 @@ namespace QonversionUnity
 #endif
         }
 
-        public void Identify(string userID)
+        public void Identify(string userID, string callbackName)
         {
 #if UNITY_IOS
-            _identify(userID);
+            _identify(userID, callbackName);
 #endif
         }
 
@@ -242,10 +247,24 @@ namespace QonversionUnity
 #endif
         }
 
-        public void RemoteConfig(string callbackName)
+        public void RemoteConfig(string contextKey, string callbackName)
         {
 #if UNITY_IOS
-            _remoteConfig(callbackName);
+            _remoteConfig(contextKey, callbackName);
+#endif
+        }
+
+        public void RemoteConfigList(string callbackName)
+        {
+#if UNITY_IOS
+            _remoteConfigList(callbackName);
+#endif
+        }
+
+        public void RemoteConfigList(string contextKeysJson, bool includeEmptyContextKey, string callbackName) 
+        {
+#if UNITY_IOS
+            _remoteConfigListForContextKeys(contextKeysJson, includeEmptyContextKey, callbackName);
 #endif
         }
 

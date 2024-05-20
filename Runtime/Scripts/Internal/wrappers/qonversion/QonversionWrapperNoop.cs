@@ -67,7 +67,15 @@ namespace QonversionUnity
         {
         }
 
-        public void RemoteConfig(string callbackName)
+        public void RemoteConfig(string contextKey, string callbackName)
+        {
+        }
+
+        public void RemoteConfigList(string callbackName)
+        {
+        }
+
+        public void RemoteConfigList(string contextKeysJson, bool includeEmptyContextKey, string callbackName)
         {
         }
 
@@ -99,7 +107,7 @@ namespace QonversionUnity
         {
         }
 
-        public void Identify(string userID)
+        public void Identify(string userID, string callbackName)
         {
         }
 
